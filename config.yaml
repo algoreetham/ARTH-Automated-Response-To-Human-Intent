@@ -1,0 +1,68 @@
+# ARTH Configuration
+# ARTH = Automated Response to Human Intent
+
+# Brain Settings (Sections 1, 22)
+brain:
+  # Primary Ollama model (gemma4:12b per spec)
+  model: "gemma4:12b"
+  # Fallback model for lighter hardware or battery mode
+  fallback_model: "gemma4:e4b"
+  # Ollama server endpoint
+  ollama_host: "http://localhost:11434"
+  # Context window size (raised above default 2048)
+  context_window: 8192
+  # Automatically attempt to launch Ollama on startup if not running
+  auto_start: true
+  # Timeout in seconds when waiting for Ollama to start
+  startup_timeout: 10
+
+# User Persona (Sections 8, 32)
+user:
+  # ARTH addresses the user as Boss
+  name: "Boss"
+
+# Voice & Speech Settings (Sections 2, 22, 34)
+voice:
+  # Custom wake word
+  wake_word: "ARTH"
+  # Wake word sensitivity: balanced / low / high
+  wake_word_sensitivity: "balanced"
+  # Speaking speed: normal / slow / fast
+  speed: "normal"
+  # Supported languages (English, Hindi, Kannada)
+  languages:
+    - "en"
+    - "hi"
+    - "kn"
+  # TTS voice profile (British male Jarvis Daniel / Ryan)
+  tts_voice: "jarvis_male"
+
+# Quiet Hours (Section 15)
+quiet_hours:
+  # During quiet hours ARTH makes no sounds and does not speak
+  enabled: true
+  start: "22:00"
+  end: "07:00"
+
+# File System Boundaries (Sections 4, 34)
+files:
+  # Strictly restricted to this single directory; operations outside are refused
+  allowed_folder: "~/Desktop/ARTH_Workspace"
+
+# Security & Permissions (Sections 5, 12, 30, 31)
+security:
+  # Voice lock: respond only to Boss's voice
+  voice_lock_enabled: true
+  # Security lockouts
+  max_password_attempts: 3
+  lockout_duration_seconds: 300
+  # Emergency contact email (Section 28)
+  trusted_contact_email: ""
+
+# System Watcher & Nudges (Sections 23, 24, 29)
+system:
+  battery_alert_threshold: 15
+  storage_alert_threshold: 10
+  unprompted_suggestions: true
+  not_now_duration_seconds: 3600
+  nudge_interval_seconds: 3600
