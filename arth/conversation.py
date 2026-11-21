@@ -60,7 +60,12 @@ class NaturalConversationEngine:
         if banter_reply:
             return banter_reply
 
-        # 5. General knowledge questions (who is, what is, explain, why does, etc.)
+        # 5. Study schedule, motivation, and productivity planning
+        study_reply = self._handle_study_and_planning(lower, cleaned)
+        if study_reply:
+            return study_reply
+
+        # 6. General knowledge questions (who is, what is, explain, why does, etc.)
         knowledge_reply = self._handle_general_knowledge(raw, lower)
         if knowledge_reply:
             return knowledge_reply
@@ -253,6 +258,30 @@ class NaturalConversationEngine:
                 f"{self.user_name}, I can manage your daily to-dos and reminders, track live system diagnostics and battery, "
                 "fetch real-time weather and news, search the web, organize files safely in your workspace, and draft emails. "
                 "Just speak or type naturally!"
+            )
+
+        return None
+
+    def _handle_study_and_planning(self, lower: str, cleaned: str) -> Optional[str]:
+        """Provide structured, inspiring, high-performance study and daily planning in Jarvis style."""
+        if any(kw in lower for kw in [
+            "study schedule", "plan my study", "plan study", "study plan",
+            "study routine", "how should i study", "how to study",
+            "plan my day", "daily schedule", "schedule today", "plan today",
+            "study session", "organize my study"
+        ]) or (
+            "study" in lower and any(k in lower for k in ["schedule", "plan", "routine", "how", "organize", "today"])
+        ):
+            return (
+                f"{self.user_name}, I recommend three 50-minute deep focus sprints separated by 10-minute active breaks. "
+                "Tackle your highest cognitive challenge first while your mental cache is fresh, follow with problem-solving or coding practice, "
+                "and consolidate with review in your final block. Say 'start study mode' whenever you're ready to engage."
+            )
+
+        if any(kw in lower for kw in ["lazy", "procrastinating", "cant focus", "can't focus", "dont want to study", "don't want to study"]):
+            return (
+                f"Even Tony Stark had off days, {self.user_name}, but great engineering waits for no one. "
+                "Give me just fifteen focused minutes on one single problem—momentum will take care of the rest."
             )
 
         return None

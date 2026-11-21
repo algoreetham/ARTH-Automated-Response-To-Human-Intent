@@ -761,7 +761,8 @@ class OllamaManager:
                 not getattr(tool_to_call, "is_risky", False)
                 and (
                     getattr(tool_to_call, "is_read_only", False)
-                    or tool_to_call.name in ["get_weather", "get_status_report", "get_news", "web_search"]
+                    or tool_to_call.name in ["get_weather", "get_status_report", "get_news", "web_search", "study_coding_helper"]
+                    or (tool_to_call.name in ["manage_todos", "manage_reminders", "manage_notes", "manage_calendar"] and tool_args.get("action") == "list")
                     or (tool_to_call.name == "manage_files" and tool_args.get("action") in ["find", "open"])
                     or (tool_to_call.name == "control_apps" and tool_args.get("action") == "open")
                     or (tool_to_call.name == "manage_android_phone" and tool_args.get("action") in ["battery", "ring"])

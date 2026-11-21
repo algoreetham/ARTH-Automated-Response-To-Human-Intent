@@ -14,7 +14,7 @@ from arth.tools.base import Tool
 
 class StudyHelperTool(Tool):
     name = "study_coding_helper"
-    description = "Explain/debug code snippets, summarize notes, or run an interactive exam quiz."
+    description = "Inspect concrete code snippets for bugs, run code analysis, summarize long documents, or start an interactive exam quiz. Do not use for general study planning or advice."
     parameters = {
         "type": "object",
         "properties": {
@@ -30,6 +30,7 @@ class StudyHelperTool(Tool):
     }
     is_sensitive = False
     is_risky = False
+    is_read_only = True
 
     SAMPLE_QUIZZES = {
         "python": [
@@ -57,6 +58,24 @@ class StudyHelperTool(Tool):
         content = kwargs.get("code_or_text", "")
 
         if mode == "explain_code":
+            # If the input was actually a study schedule or planning query
+            if any(k in content.lower() for k in ["study schedule", "plan my study", "plan study", "schedule today", "study plan", "how should i study"]):
+                spoken = "Boss, I recommend three 50-minute deep focus sprints separated by 10-minute active breaks. Tackle your hardest topic first while your energy is peak."
+                gui_explanation = (
+                    "### Recommended Study Schedule (Jarvis Protocol)\n\n"
+                    "- **Sprint 1 (50m)**: Deep cognitive focus on your most challenging topic.\n"
+                    "- **Break (10m)**: Eye reset, hydration, light stretch.\n"
+                    "- **Sprint 2 (50m)**: Active recall, coding implementation, or practice problems.\n"
+                    "- **Break (10m)**: Posture stretch.\n"
+                    "- **Sprint 3 (40m)**: Review, flashcards, and consolidation.\n"
+                )
+                return {
+                    "status": "success",
+                    "mode": mode,
+                    "spoken_summary": spoken,
+                    "gui_content": gui_explanation,
+                    "message": spoken,
+                }
             spoken = "Boss, this snippet handles standard operations and error paths cleanly."
             gui_explanation = (
                 f"### Code Analysis\n\n"
