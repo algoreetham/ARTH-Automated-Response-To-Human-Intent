@@ -400,13 +400,6 @@ class OllamaManager:
         if status_tool and any(kw in lower for kw in ["status", "battery", "cpu", "ram", "memory usage", "diagnostics", "system health", "disk"]):
             return status_tool, {}
 
-        search_tool = tool_registry.get("web_search")
-        if search_tool and any(kw in lower for kw in ["search", "who is", "lookup", "find out"]) or (
-            "what is" in lower and not any(k in lower for k in ["weather", "battery", "status", "system", "time", "date"])
-        ):
-            q = re.sub(r"^(please\s+)?(search(\s+for)?|who is|what is|lookup)\s+", "", user_input, flags=re.IGNORECASE).strip()
-            return search_tool, {"query": q or user_input}
-
         # YouTube Player (inspired by Mark-XXXIX-OR)
         yt_tool = tool_registry.get("youtube_player")
         if yt_tool and "youtube" in lower:
@@ -452,6 +445,17 @@ class OllamaManager:
             # Screenshot
             elif any(kw in lower for kw in ["screenshot", "capture screen", "take a screenshot"]):
                 return settings_tool, {"setting": "screenshot"}
+
+        search_tool = tool_registry.get("web_search")
+        if search_tool and (
+            any(kw in lower for kw in ["search", "who is", "lookup", "find out"])
+            or (
+                "what is" in lower
+                and not any(k in lower for k in ["weather", "battery", "status", "system", "time", "date", "screen", "youtube", "volume", "music", "storage"])
+            )
+        ):
+            q = re.sub(r"^(please\s+)?(search(\s+for)?|who is|what is|lookup)\s+", "", user_input, flags=re.IGNORECASE).strip()
+            return search_tool, {"query": q or user_input}
 
         study_tool = tool_registry.get("study_coding_helper")
         if study_tool and any(kw in lower for kw in ["quiz", "explain code", "debug", "summarize note"]):
