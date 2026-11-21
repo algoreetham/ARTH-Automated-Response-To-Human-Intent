@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS-black.svg?logo=apple&logoColor=white)](https://apple.com)
 [![Brain Engine](https://img.shields.io/badge/brain-Ollama%20Local-orange.svg?logo=ollama&logoColor=white)](https://ollama.com)
 [![Voice Profile](https://img.shields.io/badge/voice-Daniel%20Jarvis%20Male-purple.svg)](https://apple.com)
-[![Tests](https://img.shields.io/badge/tests-70%2F70%20passing-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![Tests](https://img.shields.io/badge/tests-118%2F118%20passing-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **A Jarvis-grade personal AI assistant for macOS, designed to automate human intent with privacy, witty intelligence, and speed.**
@@ -64,6 +64,12 @@ flowchart TD
         Search["WebSearch & Wikipedia REST API"]
         Tasks["Todos, Reminders & Notes"]
         Google["Gmail, Google Calendar & Drive Backup"]
+        Devices["Multi-Device (Android Phone, Other Mac, Lost Phone)"]
+        Routines["Routines Engine (Study, Coding, Chill, Sleep)"]
+        Hardware["Hardware Settings (Volume, Brightness, Dark Mode, Display)"]
+        Perception["Screen Vision & Workspace Context Perception"]
+        Media["Ambient Music & YouTube Instant Launcher"]
+        Emergency["Emergency Protocol (Section 28) & LaunchAgent (Section 3)"]
     end
 
     UI --> Core

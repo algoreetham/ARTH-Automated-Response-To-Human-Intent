@@ -219,9 +219,13 @@ class SecurityManager:
         if face_input != expected:
             return False, "Face not recognized."
 
-        valid_liveness = ["blink", "head_turn", "turn_head", "turned head", "blinked"]
-        if not any(v in anti_spoof_response.lower() for v in valid_liveness):
-            return False, "Anti-spoof check failed: please blink or turn your head slightly."
+        if isinstance(anti_spoof_response, bool):
+            if not anti_spoof_response:
+                return False, "Anti-spoof check failed: please blink or turn your head slightly."
+        else:
+            valid_liveness = ["blink", "head_turn", "turn_head", "turned head", "blinked", "true"]
+            if not any(v in str(anti_spoof_response).lower() for v in valid_liveness):
+                return False, "Anti-spoof check failed: please blink or turn your head slightly."
 
         return True, "Face verified with anti-spoofing challenge."
 

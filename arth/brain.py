@@ -27,6 +27,9 @@ from arth.personality import PersonalityEngine
 from arth.security.auth import SecurityManager
 from arth.security.lockdown import LockdownController
 from arth.tools.base import Tool, ToolRegistry
+from arth.watcher import ProactiveWatcher
+from arth.emergency import EmergencyProtocol
+from arth.autostart import LaunchAgentManager
 
 
 class OllamaManager:
@@ -52,6 +55,9 @@ class OllamaManager:
         self.security_manager = security_manager or SecurityManager()
         self.lockdown = lockdown_controller or LockdownController(self.security_manager)
         self.conversation_engine = NaturalConversationEngine(user_name=self.config.user.name)
+        self.watcher = ProactiveWatcher()
+        self.emergency = EmergencyProtocol(self.config)
+        self.autostart = LaunchAgentManager()
 
     def ping(self, timeout: float = 2.0) -> bool:
         """Quick check to see if Ollama HTTP server is responsive."""
@@ -324,6 +330,72 @@ class OllamaManager:
             topic = "cricket" if "cricket" in lower else ("startups" if "startups" in lower else "tech")
             return news_tool, {"topic": topic}
 
+        # Phase 9: Multi-Device Control (Android, Secondary Mac, Lost Phone)
+        android_tool = tool_registry.get("manage_android_phone")
+        if android_tool and "phone" in lower and not any(k in lower for k in ["lost", "where is", "locate", "track"]):
+            if "ring" in lower:
+                return android_tool, {"action": "ring"}
+            elif "battery" in lower:
+                return android_tool, {"action": "battery"}
+            elif any(k in lower for k in ["dnd", "do not disturb"]):
+                state = "on" if "on" in lower else ("off" if "off" in lower else "toggle")
+                return android_tool, {"action": "dnd", "dnd_state": state}
+            elif any(k in lower for k in ["notification", "notifications"]):
+                return android_tool, {"action": "notifications"}
+            elif any(v in lower for v in ["open", "launch"]):
+                m = re.search(r"(?:open|launch)\s+([a-zA-Z0-9_\-\s]+?)(?:\s+on\s+(?:my\s+)?phone|\s*$)", lower)
+                app = m.group(1).strip() if m else "YouTube"
+                return android_tool, {"action": "open_app", "app_name": app.title()}
+
+        sec_mac_tool = tool_registry.get("manage_secondary_mac")
+        if sec_mac_tool and any(k in lower for k in ["other mac", "secondary mac", "second mac"]):
+            if "wake" in lower:
+                return sec_mac_tool, {"action": "wake"}
+            elif "sleep" in lower:
+                return sec_mac_tool, {"action": "sleep"}
+            elif "lock" in lower:
+                return sec_mac_tool, {"action": "lock"}
+            elif any(k in lower for k in ["shutdown", "shut down", "turn off"]):
+                return sec_mac_tool, {"action": "shutdown"}
+            else:
+                return sec_mac_tool, {"action": "status"}
+
+        lost_tool = tool_registry.get("lost_phone_finder")
+        if lost_tool and (
+            any(k in lower for k in ["lost phone", "find my phone", "where is my phone", "locate my phone", "locate phone", "track phone", "erase phone"])
+            or ("phone" in lower and any(k in lower for k in ["where", "locate", "lost", "erase", "wipe"]))
+        ):
+            if any(k in lower for k in ["erase", "wipe"]):
+                code = "ERASE" if "erase" in lower else ""
+                return lost_tool, {"action": "erase", "confirmation_code": code}
+            elif any(k in lower for k in ["lock", "message"]):
+                return lost_tool, {"action": "lock_message"}
+            else:
+                return lost_tool, {"action": "locate"}
+
+        # Phase 10: Routines & Ambient Music
+        routine_tool = tool_registry.get("manage_routines")
+        if routine_tool and any(kw in lower for kw in ["mode", "routine"]):
+            if any(kw in lower for kw in ["list", "show", "what are my routines"]):
+                return routine_tool, {"action": "list"}
+            for m in ["study", "coding", "chill", "sleep"]:
+                if m in lower:
+                    return routine_tool, {"action": "run", "routine_name": f"{m}_mode"}
+            clean_name = re.sub(r"^(please\s+)?(run|start|execute)\s+(routine\s+)?", "", lower).strip()
+            return routine_tool, {"action": "run", "routine_name": clean_name or "study_mode"}
+
+        music_tool = tool_registry.get("control_music")
+        if music_tool and any(kw in lower for kw in ["music", "song", "track", "playlist", "lofi", "synthwave"]):
+            if "pause" in lower or "stop music" in lower:
+                return music_tool, {"action": "pause"}
+            elif any(kw in lower for kw in ["next", "skip"]):
+                return music_tool, {"action": "next"}
+            elif "resume" in lower:
+                return music_tool, {"action": "resume"}
+            else:
+                mood = "lofi" if "lofi" in lower else ("synthwave" if "synthwave" in lower else ("chill" if "chill" in lower else "focus"))
+                return music_tool, {"action": "playlist", "genre_or_mood": mood}
+
         status_tool = tool_registry.get("get_status_report")
         if status_tool and any(kw in lower for kw in ["status", "battery", "cpu", "ram", "memory usage", "diagnostics", "system health", "disk"]):
             return status_tool, {}
@@ -334,6 +406,52 @@ class OllamaManager:
         ):
             q = re.sub(r"^(please\s+)?(search(\s+for)?|who is|what is|lookup)\s+", "", user_input, flags=re.IGNORECASE).strip()
             return search_tool, {"query": q or user_input}
+
+        # YouTube Player (inspired by Mark-XXXIX-OR)
+        yt_tool = tool_registry.get("youtube_player")
+        if yt_tool and "youtube" in lower:
+            q = re.sub(r"^(please\s+)?(play|search|watch|open)\s+", "", lower).strip()
+            q = re.sub(r"\s+on\s+youtube$", "", q).strip()
+            q = re.sub(r"^youtube\s+", "", q).strip()
+            return yt_tool, {"query": q or "trending music"}
+
+        # Screen Vision / Context Perception (inspired by Mark-XXXIX-OR)
+        vision_tool = tool_registry.get("analyze_screen")
+        if vision_tool and any(kw in lower for kw in ["screen", "looking at", "frontmost window"]):
+            if any(kw in lower for kw in ["what", "analyze", "read", "check", "inspect", "view"]):
+                return vision_tool, {"save_snapshot": True}
+
+        # Hardware & Computer Settings (inspired by Mark-XXXIX-OR)
+        settings_tool = tool_registry.get("manage_computer_settings")
+        if settings_tool:
+            # Volume
+            if "volume" in lower or "louder" in lower or "quieter" in lower:
+                m_vol = re.search(r"volume\s+(?:to\s+)?(\d+)", lower)
+                if m_vol:
+                    return settings_tool, {"setting": "set_volume", "value": int(m_vol.group(1))}
+                elif any(kw in lower for kw in ["up", "increase", "higher", "louder", "raise"]):
+                    return settings_tool, {"setting": "volume_up"}
+                elif any(kw in lower for kw in ["down", "decrease", "lower", "quieter", "reduce"]):
+                    return settings_tool, {"setting": "volume_down"}
+            elif lower in ["mute", "mute audio", "mute sound", "silence audio", "mute system"]:
+                return settings_tool, {"setting": "mute"}
+            elif lower in ["unmute", "unmute audio", "unmute sound"]:
+                return settings_tool, {"setting": "unmute"}
+            # Brightness
+            elif "brightness" in lower or "dim screen" in lower:
+                if any(kw in lower for kw in ["up", "increase", "higher", "more bright", "raise"]):
+                    return settings_tool, {"setting": "brightness_up"}
+                elif any(kw in lower for kw in ["down", "decrease", "lower", "dim", "reduce"]):
+                    return settings_tool, {"setting": "brightness_down"}
+            # Appearance / Dark Mode
+            elif any(kw in lower for kw in ["dark mode", "light mode", "appearance mode", "toggle theme"]):
+                return settings_tool, {"setting": "dark_mode"}
+            # Display Sleep
+            elif any(kw in lower for kw in ["sleep display", "screen off", "display sleep"]):
+                return settings_tool, {"setting": "sleep_display"}
+            # Screenshot
+            elif any(kw in lower for kw in ["screenshot", "capture screen", "take a screenshot"]):
+                return settings_tool, {"setting": "screenshot"}
 
         study_tool = tool_registry.get("study_coding_helper")
         if study_tool and any(kw in lower for kw in ["quiz", "explain code", "debug", "summarize note"]):
@@ -520,6 +638,33 @@ class OllamaManager:
         if "delete my face data" in lower_input:
             return self.security_manager.delete_face_data()
 
+        # Section 28: Emergency protocol (no password, 10s cancel window, spoken yes)
+        if any(w in lower_input for w in ["emergency", "boss needs help"]):
+            alert_data = self.emergency.prepare_emergency_alert()
+            # Spoken prompt, single yes/no, no password required
+            approved = permission_engine.prompt_callback(alert_data["spoken_prompt"])
+            res = self.emergency.dispatch_alert(alert_data, confirmed_by_user=approved)
+            if logger:
+                logger.log(
+                    query=user_input,
+                    tool="emergency_protocol",
+                    status="approved" if approved else "cancelled",
+                    reason=res["message"],
+                )
+            return res["message"]
+
+        # Section 3: macOS LaunchAgent auto-start on login
+        if any(w in lower_input for w in ["auto-start", "autostart", "start on login", "start automatically"]):
+            if any(w in lower_input for w in ["disable", "uninstall", "remove", "turn off"]):
+                res = self.autostart.uninstall()
+                return res["message"]
+            res = self.autostart.install()
+            return res["message"]
+
+        # Section 24: "not now" or "leave me alone" (1-hour proactive silence)
+        if any(w in lower_input for w in ["not now", "leave me alone", "be quiet"]):
+            return self.watcher.trigger_not_now()
+
         # 4. Handle Section 32 Conversational greetings and small talk (instant response)
         pers = personality or PersonalityEngine()
         convo_reply = pers.check_conversational_turn(user_input)
@@ -607,13 +752,22 @@ class OllamaManager:
                 tool_args = args
 
         if tool_to_call:
-            is_read_only = (
-                getattr(tool_to_call, "is_read_only", False)
-                or tool_to_call.name in ["get_weather", "get_status_report", "get_news", "web_search"]
-                or (tool_to_call.name == "manage_files" and tool_args.get("action") in ["find", "open"])
-                or (tool_to_call.name == "control_apps" and tool_args.get("action") == "open")
-            )
             action_desc = tool_to_call.describe_action(**tool_args)
+            is_read_only = (
+                not getattr(tool_to_call, "is_risky", False)
+                and (
+                    getattr(tool_to_call, "is_read_only", False)
+                    or tool_to_call.name in ["get_weather", "get_status_report", "get_news", "web_search"]
+                    or (tool_to_call.name == "manage_files" and tool_args.get("action") in ["find", "open"])
+                    or (tool_to_call.name == "control_apps" and tool_args.get("action") == "open")
+                    or (tool_to_call.name == "manage_android_phone" and tool_args.get("action") in ["battery", "ring"])
+                    or (tool_to_call.name == "manage_secondary_mac" and tool_args.get("action") == "status")
+                    or (tool_to_call.name == "lost_phone_finder" and tool_args.get("action") == "locate")
+                    or (tool_to_call.name == "manage_routines" and tool_args.get("action") == "list")
+                    or (tool_to_call.name == "control_music")
+                    or (tool_to_call.name in ["manage_computer_settings", "analyze_screen", "youtube_player"])
+                )
+            )
 
             if is_read_only:
                 approved = True

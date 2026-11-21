@@ -66,3 +66,13 @@ system:
   unprompted_suggestions: true
   not_now_duration_seconds: 3600
   nudge_interval_seconds: 3600
+
+# Device Control Settings (Section 11)
+devices:
+  android_ip: "192.168.1.150"
+  android_port: 5555
+  android_method: "adb"
+  secondary_mac_ip: "192.168.1.160"
+  secondary_mac_mac: "00:1A:2B:3C:4D:5E"
+  secondary_mac_user: "boss"
+  lost_phone_contact_number: "+91 98765 43210"

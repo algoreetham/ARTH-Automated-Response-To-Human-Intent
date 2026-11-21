@@ -46,6 +46,7 @@ sec_vault.json
 *.key
 
 # Local dynamic runtime files & logs
+logs/
 logs/*.jsonl
 logs/*.log
 *.db

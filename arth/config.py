@@ -76,6 +76,17 @@ class SystemConfig:
 
 
 @dataclass
+class DevicesConfig:
+    android_ip: str = "192.168.1.150"
+    android_port: int = 5555
+    android_method: str = "adb"
+    secondary_mac_ip: str = "192.168.1.160"
+    secondary_mac_mac: str = "00:1A:2B:3C:4D:5E"
+    secondary_mac_user: str = "boss"
+    lost_phone_contact_number: str = "+91 98765 43210"
+
+
+@dataclass
 class ArthConfig:
     brain: BrainConfig = field(default_factory=BrainConfig)
     user: UserConfig = field(default_factory=UserConfig)
@@ -84,6 +95,7 @@ class ArthConfig:
     files: FilesConfig = field(default_factory=FilesConfig)
     security: SecurityConfig = field(default_factory=SecurityConfig)
     system: SystemConfig = field(default_factory=SystemConfig)
+    devices: DevicesConfig = field(default_factory=DevicesConfig)
 
 
 def load_config(config_path: Path | str | None = None, env_path: Path | str | None = None) -> ArthConfig:
@@ -120,6 +132,7 @@ def load_config(config_path: Path | str | None = None, env_path: Path | str | No
     files_data = raw_cfg.get("files", {})
     sec_data = raw_cfg.get("security", {})
     sys_data = raw_cfg.get("system", {})
+    dev_data = raw_cfg.get("devices", {})
 
     return ArthConfig(
         brain=BrainConfig(
@@ -160,5 +173,14 @@ def load_config(config_path: Path | str | None = None, env_path: Path | str | No
             unprompted_suggestions=sys_data.get("unprompted_suggestions", True),
             not_now_duration_seconds=sys_data.get("not_now_duration_seconds", 3600),
             nudge_interval_seconds=sys_data.get("nudge_interval_seconds", 3600),
+        ),
+        devices=DevicesConfig(
+            android_ip=dev_data.get("android_ip", "192.168.1.150"),
+            android_port=dev_data.get("android_port", 5555),
+            android_method=dev_data.get("android_method", "adb"),
+            secondary_mac_ip=dev_data.get("secondary_mac_ip", "192.168.1.160"),
+            secondary_mac_mac=dev_data.get("secondary_mac_mac", "00:1A:2B:3C:4D:5E"),
+            secondary_mac_user=dev_data.get("secondary_mac_user", "boss"),
+            lost_phone_contact_number=dev_data.get("lost_phone_contact_number", "+91 98765 43210"),
         ),
     )

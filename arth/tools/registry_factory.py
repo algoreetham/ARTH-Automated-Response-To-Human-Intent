@@ -19,6 +19,12 @@ from arth.tools.status_tool import StatusReportTool
 from arth.tools.project_tool import ProjectHelperTool
 from arth.tools.gmail_tool import GmailTool
 from arth.tools.calendar_tool import CalendarTool
+from arth.tools.device_tool import AndroidDeviceTool, SecondaryMacTool, LostPhoneFinderTool
+from arth.routines import RoutineTool
+from arth.watcher import MusicControlTool
+from arth.tools.system_settings_tool import SystemSettingsTool
+from arth.tools.vision_tool import ScreenVisionTool
+from arth.tools.youtube_tool import YouTubeTool
 
 
 def get_default_registry() -> ToolRegistry:
@@ -40,4 +46,12 @@ def get_default_registry() -> ToolRegistry:
     registry.register(ProjectHelperTool())
     registry.register(GmailTool())
     registry.register(CalendarTool())
+    registry.register(AndroidDeviceTool())
+    registry.register(SecondaryMacTool())
+    registry.register(LostPhoneFinderTool())
+    registry.register(RoutineTool())
+    registry.register(MusicControlTool())
+    registry.register(SystemSettingsTool())
+    registry.register(ScreenVisionTool())
+    registry.register(YouTubeTool())
     return registry
