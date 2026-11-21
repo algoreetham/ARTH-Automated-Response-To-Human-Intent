@@ -106,7 +106,7 @@ class OllamaManager:
                 return True, model_name
 
         if installed:
-            for preferred in ["qwen2.5:0.5b", "qwen2.5:1.5b", "llama3.2:1b", "smollm2:135m"]:
+            for preferred in ["arth:latest", "arth:fast", "llama3.2:1b", "qwen2.5:0.5b", "smollm2:135m"]:
                 for m in installed:
                     if m == preferred or m.startswith(f"{preferred}:"):
                         return False, m
